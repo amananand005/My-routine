@@ -1,0 +1,1 @@
+Important: sw.js is corrected for root-level icons. Replace the old sw.js in GitHub with this version.
