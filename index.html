@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Routine</title>
+    <!-- Enhanced PWA metadata -->
+    <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="My Routine">
+    <meta name="application-name" content="My Routine">
+    <meta name="msapplication-TileColor" content="#6366f1">
+    <meta name="description" content="My Routine — interactive daily routine visualizer with live progress and time-based themes.">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    
+    <!-- Custom SVG Favicon: Routine & Consistency Symbol (Circular progress loop + Checkmark) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%236366f1'/><stop offset='100%' stop-color='%2306b6d4'/></linearGradient></defs><circle cx='50' cy='50' r='48' fill='url(%23grad)'/><path d='M50 18 A 32 32 0 1 1 18 50' fill='none' stroke='%23ffffff' stroke-width='8' stroke-linecap='round'/><polyline points='38 52 48 62 68 38' fill='none' stroke='%23ffffff' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: background 1.2s ease, color 0.8s ease;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Time of Day Vibe Themes */
+        .vibe-morning {
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fef3c7 100%);
+            color: #1e293b;
+        }
+        .vibe-morning .glass {
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(251, 146, 60, 0.25);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.1);
+        }
+
+        .vibe-afternoon {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #e0e7ff 100%);
+            color: #0f172a;
+        }
+        .vibe-afternoon .glass {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.1);
+        }
+
+        .vibe-evening {
+            background: linear-gradient(135deg, #31103f 0%, #6b21a8 40%, #9a3412 100%);
+            color: #f8fafc;
+        }
+        .vibe-evening .glass {
+            background: rgba(30, 16, 50, 0.78);
+            border: 1px solid rgba(249, 115, 22, 0.25);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .vibe-night {
+            background: linear-gradient(135deg, #090d16 0%, #0f172a 60%, #1e1b4b 100%);
+            color: #f1f5f9;
+        }
+        .vibe-night .glass {
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Task Block Color Classes */
+        .color-study1 { background-color: #2563eb; color: #fff; }
+        .color-hw1 { background-color: #eab308; color: #fff; }
+        .color-study2 { background-color: #dc2626; color: #fff; }
+        .color-eco { background-color: #16a34a; color: #fff; }
+        .color-hw2 { background-color: #ca8a04; color: #fff; }
+        .color-trading { background-color: #ea580c; color: #fff; }
+        .color-sleep { background-color: #6d28d9; color: #fff; }
+
+        /* Touch & Tap Animations */
+        .interactive-block {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, filter 0.2s ease;
+            cursor: pointer;
+        }
+        .interactive-block:active, .interactive-block:hover {
+            transform: translateY(-3px) scale(1.04);
+            filter: brightness(1.15);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .drawer-slide {
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes popupIn {
+            0% { transform: scale(0.85) translateY(20px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .animate-popup {
+            animation: popupIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+
+<body id="bodyTheme" class="vibe-morning flex flex-col justify-between p-4 md:p-8 min-h-screen">
+
+    <!-- Header -->
+    <header class="max-w-3xl mx-auto w-full">
+        <div class="glass rounded-3xl p-4 md:p-5 flex justify-between items-center">
+            <!-- App Title & Routine Icon -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-lg shadow-md">
+                    <i class="fa-solid fa-rotate"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight">My Routine</h1>
+                    <div class="text-[11px] opacity-70 font-semibold" id="vibeSubtitle">Morning Vibe 🌅</div>
+                </div>
+            </div>
+
+            <!-- Real-time Clock & Menu Button -->
+            <div class="flex items-center space-x-3">
+                <div class="text-right">
+                    <div id="liveClock" class="text-lg md:text-xl font-black font-mono tracking-tight">00:00 AM</div>
+                </div>
+                <button id="installAppBtn" onclick="installPWA()" class="hidden w-11 h-11 rounded-2xl glass hover:bg-black/10 flex items-center justify-center text-lg font-bold transition-all active:scale-90" aria-label="Install My Routine">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+                <button onclick="toggleMenu(true)" class="w-11 h-11 rounded-2xl glass hover:bg-black/10 flex items-center justify-center text-lg font-bold transition-all active:scale-90">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto w-full my-auto py-6 space-y-6">
+
+        <!-- Active Task Highlight Card -->
+        <div id="activeCard" onclick="openTaskModal(currentActiveId)" class="glass rounded-3xl p-6 md:p-8 text-center relative overflow-hidden interactive-block">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-600 font-bold text-xs uppercase tracking-wider mb-4">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Active Now • Tap for Details
+            </div>
+
+            <!-- Big Icon & Title -->
+            <div id="activeTaskIconBox" class="w-20 h-20 mx-auto rounded-3xl bg-blue-600 text-white flex items-center justify-center text-3xl shadow-xl mb-4 transition-all">
+                <i id="activeTaskIcon" class="fa-solid fa-book-open"></i>
+            </div>
+            <h2 id="activeTaskName" class="text-2xl md:text-3xl font-black tracking-tight">STUDY</h2>
+            <p id="activeTaskTime" class="text-sm font-semibold opacity-75 mt-1">08:00 AM - 12:00 PM</p>
+
+            <!-- Progress Bar inside Card -->
+            <div class="max-w-sm mx-auto mt-6">
+                <div class="flex justify-between text-xs font-bold opacity-75 mb-1.5">
+                    <span>Task Progress</span>
+                    <span id="activeTaskPercent">0%</span>
+                </div>
+                <div class="w-full h-3 bg-black/10 rounded-full overflow-hidden p-0.5">
+                    <div id="activeTaskProgress" class="h-full bg-indigo-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sleek Interactive Timeline Bar -->
+        <div class="glass rounded-3xl p-5 md:p-6 space-y-2">
+            <div class="flex justify-between text-xs font-bold opacity-75 px-1">
+                <span>8 AM</span>
+                <span>12 PM</span>
+                <span>4 PM</span>
+                <span>10 PM</span>
+                <span>8 AM</span>
+            </div>
+
+            <!-- Proportional Interactive Color Bar -->
+            <div class="relative w-full h-10 bg-black/10 rounded-2xl p-1 flex gap-1 overflow-hidden shadow-inner">
+                <div onclick="openTaskModal(0)" class="h-full rounded-xl color-study1 flex items-center justify-center text-[11px] font-black truncate interactive-block" style="width: 16.66%">STUDY</div>
+                <div onclick="openTaskModal(1)" class="h-full rounded-xl color-hw1 flex items-center justify-center text-[11px] font-black truncate interactive-block" style="width: 8.33%">H.W.</div>
+                <div onclick="openTaskModal(2)" class="h-full rounded-xl color-study2 flex items-center justify-center text-[11px] font-black truncate interactive-block" style="width: 8.33%">STUDY</div>
+                <div onclick="openTaskModal(3)" class="h-full rounded-xl color-eco flex items-center justify-center text-[11px] font-black truncate interactive-block" style="width: 20.83%">ECO</div>
+                <div onclick="openTaskModal(4)" class="h-full rounded-xl color-hw2 flex items-center justify-center text-[11px] font-black truncate interactive-block" style="width: 4.16%">H.W.</div>
+                <div onclick="openTaskModal(5)" class="h-full rounded-xl color-trading flex items-center justify-center text-[11px] font-black truncate interactive-block" style="width: 8.33%">TRADING</div>
+                <div onclick="openTaskModal(6)" class="h-full rounded-xl color-sleep flex items-center justify-center text-[11px] font-black truncate interactive-block" style="width: 33.33%">SLEEP</div>
+
+                <!-- Real-time Live Pointer -->
+                <div id="livePointer" class="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_14px_#ffffff] z-10 transition-all duration-500 -translate-x-1/2 pointer-events-none" style="left: 0%;">
+                    <div class="w-3.5 h-3.5 bg-white rounded-full absolute -top-1 -left-1.25 shadow"></div>
+                </div>
+            </div>
+            <div class="text-center text-[11px] font-bold opacity-60 pt-1">
+                💡 Tap any schedule bar to view full details
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Task Detail Pop-up Modal -->
+    <div id="taskModalBackdrop" onclick="closeTaskModal()" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 hidden opacity-0 transition-opacity flex items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="glass max-w-sm w-full rounded-3xl p-6 text-center animate-popup relative shadow-2xl">
+            <button onclick="closeTaskModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/10 flex items-center justify-center text-sm hover:bg-black/20 active:scale-90">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div id="modalIconBox" class="w-16 h-16 mx-auto rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl shadow-lg mb-3">
+                <i id="modalIcon" class="fa-solid fa-book-open"></i>
+            </div>
+            <h3 id="modalTitle" class="text-xl font-black tracking-tight">STUDY</h3>
+            <div id="modalTime" class="text-xs font-bold opacity-70 mt-0.5">08:00 AM - 12:00 PM (4 Hours)</div>
+
+            <div class="my-4 p-3 rounded-2xl bg-black/5 text-left space-y-1.5 text-xs font-medium">
+                <div class="font-bold opacity-80 uppercase text-[10px] tracking-wider">Description</div>
+                <p id="modalDesc" class="opacity-90 leading-relaxed">Focus on key academic subjects and study tools.</p>
+            </div>
+
+            <div class="flex justify-between items-center text-xs font-bold pt-1">
+                <span id="modalStatusBadge" class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-600">Active Now</span>
+                <button onclick="closeTaskModal()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white shadow-md active:scale-95 transition-transform">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Side Drawer & Backdrop -->
+    <div id="menuBackdrop" onclick="toggleMenu(false)" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity"></div>
+
+    <aside id="menuDrawer" class="fixed top-0 right-0 bottom-0 w-full max-w-sm glass z-50 p-6 flex flex-col justify-between drawer-slide translate-x-full overflow-y-auto">
+        <div>
+            <!-- Drawer Header -->
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-extrabold flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-indigo-500"></i> Menu & Details
+                </h3>
+                <button onclick="toggleMenu(false)" class="w-9 h-9 rounded-xl glass flex items-center justify-center text-lg hover:bg-black/10 active:scale-90">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Theme Override Selector -->
+            <div class="mb-6 p-4 rounded-2xl bg-black/5 space-y-3">
+                <label class="text-xs font-bold uppercase tracking-wider opacity-75">Theme Vibe</label>
+                <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                    <button onclick="setThemeMode('auto')" id="btn-auto" class="p-2.5 rounded-xl bg-indigo-600 text-white text-center active:scale-95 transition-transform">Auto (Time)</button>
+                    <button onclick="setThemeMode('morning')" id="btn-morning" class="p-2.5 rounded-xl glass text-center active:scale-95 transition-transform">🌅 Morning</button>
+                    <button onclick="setThemeMode('afternoon')" id="btn-afternoon" class="p-2.5 rounded-xl glass text-center active:scale-95 transition-transform">☀️ Afternoon</button>
+                    <button onclick="setThemeMode('evening')" id="btn-evening" class="p-2.5 rounded-xl glass text-center active:scale-95 transition-transform">🌆 Evening</button>
+                    <button onclick="setThemeMode('night')" id="btn-night" class="p-2.5 rounded-xl glass text-center col-span-2 active:scale-95 transition-transform">🌙 Night</button>
+                </div>
+            </div>
+
+            <!-- PWA Install -->
+            <div id="pwaInstallCard" class="mb-6 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-extrabold">Install My Routine</div>
+                        <div id="pwaInstallText" class="text-[10px] opacity-70">Add the app to your home screen.</div>
+                    </div>
+                    <button id="menuInstallBtn" onclick="installPWA()" class="px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold active:scale-95">
+                        Install
+                    </button>
+                </div>
+            </div>
+
+            <!-- Full Schedule Breakdown List -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider opacity-75">Full Schedule Breakdown</h4>
+                <div id="fullScheduleList" class="space-y-2">
+                    <!-- Injected by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center text-xs opacity-70 font-bold">
+            My Routine
+        </div>
+    </aside>
+
+    <script>
+        const schedule = [
+            { 
+                id: 0, 
+                title: "STUDY", 
+                start: 8, 
+                end: 12, 
+                dur: "4 Hours",
+                icon: "fa-book-open", 
+                bg: "bg-blue-600",
+                desc: "Primary core study block. Ideal for high-concentration topics, study tools, and core academic subjects."
+            },
+            { 
+                id: 1, 
+                title: "HOME WORK (H.W.)", 
+                start: 12, 
+                end: 14, 
+                dur: "2 Hours",
+                icon: "fa-pen-to-square", 
+                bg: "bg-yellow-500",
+                desc: "Complete daily assignments, revision exercises, and routine housework/tasks."
+            },
+            { 
+                id: 2, 
+                title: "STUDY", 
+                start: 14, 
+                end: 16, 
+                dur: "2 Hours",
+                icon: "fa-laptop-code", 
+                bg: "bg-red-600",
+                desc: "Secondary focused learning session, revision, practice problems, or practical computer work."
+            },
+            { 
+                id: 3, 
+                title: "ECO (SKILLS COURSE)", 
+                start: 16, 
+                end: 21, 
+                dur: "5 Hours",
+                icon: "fa-graduation-cap", 
+                bg: "bg-emerald-600",
+                desc: "Dedicated skill development course (ECO). Focus on professional skills, certifications, and project work."
+            },
+            { 
+                id: 4, 
+                title: "HOME WORK (H.W.)", 
+                start: 21, 
+                end: 22, 
+                dur: "1 Hour",
+                icon: "fa-broom", 
+                bg: "bg-amber-600",
+                desc: "Evening review, home organization, and preparing materials for the next day."
+            },
+            { 
+                id: 5, 
+                title: "TRADING", 
+                start: 22, 
+                end: 24, 
+                dur: "2 Hours",
+                icon: "fa-chart-line", 
+                bg: "bg-orange-600",
+                desc: "Market chart analysis, live trading sessions, strategy reviews, and financial journal entries."
+            },
+            { 
+                id: 6, 
+                title: "SLEEP", 
+                start: 0, 
+                end: 8, 
+                dur: "8 Hours",
+                icon: "fa-moon", 
+                bg: "bg-purple-700",
+                desc: "Rest and rejuvenation. Unplug from screens to ensure 8 hours of deep recovery sleep."
+            }
+        ];
+
+        let currentActiveId = 0;
+        let themeOverride = 'auto';
+
+        function formatTimeStr(hr) {
+            if (hr === 0 || hr === 24) return "12:00 AM";
+            if (hr === 12) return "12:00 PM";
+            return hr > 12 ? `${String(hr - 12).padStart(2, '0')}:00 PM` : `${String(hr).padStart(2, '0')}:00 AM`;
+        }
+
+        function renderMenuList() {
+            const list = document.getElementById('fullScheduleList');
+            list.innerHTML = schedule.map(s => `
+                <div id="item-${s.id}" onclick="openTaskModal(${s.id})" class="p-3 rounded-2xl glass flex justify-between items-center text-xs font-bold interactive-block">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-xl ${s.bg} text-white flex items-center justify-center text-sm shadow">
+                            <i class="fa-solid ${s.icon}"></i>
+                        </div>
+                        <div>
+                            <div>${s.title}</div>
+                            <div class="text-[10px] opacity-70">${formatTimeStr(s.start)} - ${formatTimeStr(s.end)}</div>
+                        </div>
+                    </div>
+                    <span id="badge-${s.id}" class="text-[10px] px-2 py-0.5 rounded-full bg-black/10">Scheduled</span>
+                </div>
+            `).join('');
+        }
+
+        function openTaskModal(id) {
+            const item = schedule.find(s => s.id === id);
+            if (!item) return;
+
+            document.getElementById('modalTitle').innerText = item.title;
+            document.getElementById('modalTime').innerText = `${formatTimeStr(item.start)} - ${formatTimeStr(item.end)} (${item.dur})`;
+            document.getElementById('modalDesc').innerText = item.desc;
+            document.getElementById('modalIcon').className = `fa-solid ${item.icon}`;
+            document.getElementById('modalIconBox').className = `w-16 h-16 mx-auto rounded-2xl ${item.bg} text-white flex items-center justify-center text-2xl shadow-lg mb-3`;
+
+            const badge = document.getElementById('modalStatusBadge');
+            if (id === currentActiveId) {
+                badge.innerText = "● Active Now";
+                badge.className = "px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-600 font-bold";
+            } else {
+                badge.innerText = "Scheduled Task";
+                badge.className = "px-3 py-1 rounded-full bg-black/10 opacity-75 font-bold";
+            }
+
+            const modal = document.getElementById('taskModalBackdrop');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeTaskModal() {
+            const modal = document.getElementById('taskModalBackdrop');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 250);
+        }
+
+        function toggleMenu(open) {
+            const drawer = document.getElementById('menuDrawer');
+            const backdrop = document.getElementById('menuBackdrop');
+            if (open) {
+                backdrop.classList.remove('hidden');
+                setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+                drawer.classList.remove('translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('translate-x-full');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+            }
+        }
+
+        function setThemeMode(mode) {
+            themeOverride = mode;
+            updateLoop();
+        }
+
+        function updateLoop() {
+            const now = new Date();
+            const hrs = now.getHours();
+            const mins = now.getMinutes();
+
+            document.getElementById('liveClock').innerText = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
+
+            const body = document.getElementById('bodyTheme');
+            const subtitle = document.getElementById('vibeSubtitle');
+            let activeVibe = themeOverride;
+
+            if (themeOverride === 'auto') {
+                if (hrs >= 6 && hrs < 12) activeVibe = 'morning';
+                else if (hrs >= 12 && hrs < 17) activeVibe = 'afternoon';
+                else if (hrs >= 17 && hrs < 20) activeVibe = 'evening';
+                else activeVibe = 'night';
+            }
+
+            body.className = `vibe-${activeVibe} flex flex-col justify-between p-4 md:p-8 min-h-screen`;
+            subtitle.innerText = `${activeVibe.charAt(0).toUpperCase() + activeVibe.slice(1)} Vibe ${activeVibe==='morning'?'🌅':activeVibe==='afternoon'?'☀️':activeVibe==='evening'?'🌆':'🌙'}`;
+
+            let minsFrom8AM = (hrs * 60 + mins) - (8 * 60);
+            if (minsFrom8AM < 0) minsFrom8AM += 1440;
+            const percent24 = Math.min(Math.max((minsFrom8AM / 1440) * 100, 0), 100);
+            document.getElementById('livePointer').style.left = `${percent24}%`;
+
+            schedule.forEach(s => {
+                let isActive = false;
+                if (s.start < s.end) {
+                    isActive = hrs >= s.start && hrs < s.end;
+                } else {
+                    isActive = hrs >= s.start || hrs < s.end;
+                }
+
+                const badge = document.getElementById(`badge-${s.id}`);
+
+                if (isActive) {
+                    currentActiveId = s.id;
+                    document.getElementById('activeTaskName').innerText = s.title;
+                    document.getElementById('activeTaskTime').innerText = `${formatTimeStr(s.start)} - ${formatTimeStr(s.end)}`;
+                    document.getElementById('activeTaskIcon').className = `fa-solid ${s.icon}`;
+                    document.getElementById('activeTaskIconBox').className = `w-20 h-20 mx-auto rounded-3xl ${s.bg} text-white flex items-center justify-center text-3xl shadow-xl mb-4 transition-all`;
+
+                    let startMinsFrom8 = (s.start * 60) - (8 * 60);
+                    if (startMinsFrom8 < 0) startMinsFrom8 += 1440;
+                    let durMins = (s.end > s.start ? (s.end - s.start) : (24 - s.start + s.end)) * 60;
+                    let elapsed = minsFrom8AM - startMinsFrom8;
+                    let prog = Math.min(Math.max(Math.round((elapsed / durMins) * 100), 0), 100);
+
+                    document.getElementById('activeTaskPercent').innerText = `${prog}%`;
+                    document.getElementById('activeTaskProgress').style.width = `${prog}%`;
+
+                    if (badge) {
+                        badge.innerText = "Active";
+                        badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold";
+                    }
+                } else {
+                    if (badge) {
+                        badge.innerText = "Scheduled";
+                        badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-black/10";
+                    }
+                }
+            });
+        }
+
+        // Disable text copying, right clicks & drag actions
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && ['c', 'C', 'u', 'U', 's', 'S', 'a', 'A', 'p', 'P'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+
+        // ---------------- PWA ----------------
+        let deferredInstallPrompt = null;
+
+        function isStandalone() {
+            return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.navigator.standalone === true ||
+                   document.referrer.startsWith('android-app://');
+        }
+
+        function updateInstallUI() {
+            const headerBtn = document.getElementById('installAppBtn');
+            const menuBtn = document.getElementById('menuInstallBtn');
+            const card = document.getElementById('pwaInstallCard');
+            const text = document.getElementById('pwaInstallText');
+
+            if (isStandalone()) {
+                if (headerBtn) headerBtn.classList.add('hidden');
+                if (card) card.classList.add('hidden');
+                return;
+            }
+
+            if (deferredInstallPrompt) {
+                if (headerBtn) headerBtn.classList.remove('hidden');
+                if (menuBtn) menuBtn.classList.remove('hidden');
+                if (text) text.innerText = 'Install this app on your device.';
+            } else {
+                if (headerBtn) headerBtn.classList.add('hidden');
+                if (menuBtn) menuBtn.classList.add('hidden');
+                if (text) text.innerText = 'Use your browser menu to add it to the home screen.';
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', event => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            updateInstallUI();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            updateInstallUI();
+        });
+
+        async function installPWA() {
+            if (!deferredInstallPrompt) {
+                alert('To install My Routine, open the browser menu and choose "Add to Home screen" or "Install app".');
+                return;
+            }
+
+            deferredInstallPrompt.prompt();
+            const result = await deferredInstallPrompt.userChoice;
+            if (result.outcome === 'accepted') {
+                deferredInstallPrompt = null;
+            }
+            updateInstallUI();
+        }
+
+        // Register service worker on HTTPS or localhost.
+        if ('serviceWorker' in navigator &&
+            (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+                    registration.addEventListener('updatefound', () => {
+                        const worker = registration.installing;
+                        if (!worker) return;
+                        worker.addEventListener('statechange', () => {
+                            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('A new My Routine version is available.');
+                            }
+                        });
+                    });
+                } catch (err) {
+                    console.warn('Service worker registration failed:', err);
+                }
+            });
+        }
+
+        updateInstallUI();
+
+        renderMenuList();
+        updateLoop();
+        setInterval(updateLoop, 1000);
+    </script>
+</body>
+</html>
