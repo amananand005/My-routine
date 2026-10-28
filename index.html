@@ -28,98 +28,89 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        * {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }
 
+        /* ===== Skeuomorphism: leather desk, raised metal/paper panels, glossy keys ===== */
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: background 1.2s ease, color 0.8s ease;
-            min-height: 100vh;
-            overflow-x: hidden;
+            font-family:'Plus Jakarta Sans',sans-serif;
+            min-height:100vh; overflow-x:hidden;
+            color:var(--text);
+            text-shadow:0 1px 0 var(--emboss);
+            background:
+                radial-gradient(ellipse at 50% 0%, var(--glow), transparent 65%),
+                repeating-linear-gradient(45deg, rgba(0,0,0,.035) 0 1px, transparent 1px 4px),
+                repeating-linear-gradient(-45deg, rgba(255,255,255,.03) 0 1px, transparent 1px 5px),
+                var(--bg);
+            background-attachment:fixed;
+        }
+        .vibe-morning   { --bg:#c9a678; --glow:rgba(255,235,190,.55); --p1:#fffaf0; --p2:#eadcc2; --edge:#a8895c; --text:#3b2a14; --emboss:rgba(255,255,255,.7); --hi:rgba(255,255,255,.95); --sh:rgba(70,40,10,.38); --sh2:rgba(120,80,30,.28); }
+        .vibe-afternoon { --bg:#8fa7bf; --glow:rgba(255,255,255,.5);  --p1:#fbfdff; --p2:#d3dde8; --edge:#7c8fa3; --text:#1c2a3a; --emboss:rgba(255,255,255,.8); --hi:rgba(255,255,255,1);    --sh:rgba(20,40,70,.4);  --sh2:rgba(40,70,110,.25); }
+        .vibe-evening   { --bg:#3a2433; --glow:rgba(255,140,70,.28);  --p1:#5a4150; --p2:#33222d; --edge:#1a0f16; --text:#f6e8dc; --emboss:rgba(0,0,0,.65);       --hi:rgba(255,255,255,.22); --sh:rgba(0,0,0,.65);   --sh2:rgba(0,0,0,.5); }
+        .vibe-night     { --bg:#141a26; --glow:rgba(120,130,255,.2);  --p1:#3a4356; --p2:#1d2433; --edge:#080b12; --text:#e6ebf5; --emboss:rgba(0,0,0,.7);        --hi:rgba(255,255,255,.2);  --sh:rgba(0,0,0,.75);   --sh2:rgba(0,0,0,.55); }
+
+        /* Raised panel */
+        .glass {
+            background:linear-gradient(180deg,var(--p1),var(--p2));
+            border:1px solid var(--edge);
+            backdrop-filter:none;
+            box-shadow:inset 0 1px 0 var(--hi), inset 0 -3px 5px var(--sh2), 0 10px 18px -4px var(--sh), 0 2px 3px var(--sh) !important;
+        }
+        /* Keys (small buttons that sit on panels) press down */
+        button.glass:active { transform:translateY(2px) scale(.97);
+            box-shadow:inset 0 3px 6px var(--sh), inset 0 -1px 0 var(--hi), 0 1px 0 var(--hi) !important; }
+
+        /* Screws in the active card corners */
+        #activeCard::before {
+            content:""; position:absolute; inset:0; pointer-events:none;
+            background:
+                radial-gradient(circle at 14px 14px, #f2f2f2 0 2px, #8b8b8b 3.5px, #4a4a4a 5px, transparent 5.5px),
+                radial-gradient(circle at calc(100% - 14px) 14px, #f2f2f2 0 2px, #8b8b8b 3.5px, #4a4a4a 5px, transparent 5.5px),
+                radial-gradient(circle at 14px calc(100% - 14px), #f2f2f2 0 2px, #8b8b8b 3.5px, #4a4a4a 5px, transparent 5.5px),
+                radial-gradient(circle at calc(100% - 14px) calc(100% - 14px), #f2f2f2 0 2px, #8b8b8b 3.5px, #4a4a4a 5px, transparent 5.5px);
         }
 
-        /* Time of Day Vibe Themes */
-        .vibe-morning {
-            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fef3c7 100%);
-            color: #1e293b;
-        }
-        .vibe-morning .glass {
-            background: rgba(255, 255, 255, 0.82);
-            border: 1px solid rgba(251, 146, 60, 0.25);
-            backdrop-filter: blur(16px);
-            box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.1);
+        /* Clock = recessed LCD window */
+        #liveClock {
+            padding:6px 10px; border-radius:8px; color:#a8ffb0; text-shadow:0 0 6px rgba(120,255,140,.8);
+            background:linear-gradient(180deg,#0c1a10,#16301c);
+            border:2px solid var(--edge);
+            box-shadow:inset 0 3px 7px rgba(0,0,0,.85), 0 1px 0 var(--hi);
         }
 
-        .vibe-afternoon {
-            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #e0e7ff 100%);
-            color: #0f172a;
+        /* Glossy coloured blocks: timeline bars + icon tiles + primary buttons */
+        [class*="color-"], #activeTaskIconBox, #modalIconBox, #fullScheduleList .w-8, .bg-indigo-600 {
+            background-image:linear-gradient(180deg,rgba(255,255,255,.45) 0%,rgba(255,255,255,.08) 50%,rgba(0,0,0,.2) 100%);
+            border:1px solid rgba(0,0,0,.35);
+            text-shadow:0 -1px 0 rgba(0,0,0,.45);
+            box-shadow:inset 0 1px 0 rgba(255,255,255,.6), inset 0 -3px 4px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.4) !important;
         }
-        .vibe-afternoon .glass {
-            background: rgba(255, 255, 255, 0.85);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            backdrop-filter: blur(16px);
-            box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.1);
-        }
+        #activeTaskIconBox, #modalIconBox { box-shadow:inset 0 2px 0 rgba(255,255,255,.65), inset 0 -5px 8px rgba(0,0,0,.35), 0 8px 14px rgba(0,0,0,.45) !important; }
+        button.bg-indigo-600:active { transform:translateY(2px); box-shadow:inset 0 3px 6px rgba(0,0,0,.5) !important; }
 
-        .vibe-evening {
-            background: linear-gradient(135deg, #31103f 0%, #6b21a8 40%, #9a3412 100%);
-            color: #f8fafc;
+        /* Recessed grooves (progress track, timeline track) */
+        .groove {
+            background-image:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.08)) !important;
+            border:1px solid rgba(0,0,0,.3);
+            box-shadow:inset 0 3px 6px rgba(0,0,0,.5), 0 1px 0 var(--hi) !important;
         }
-        .vibe-evening .glass {
-            background: rgba(30, 16, 50, 0.78);
-            border: 1px solid rgba(249, 115, 22, 0.25);
-            backdrop-filter: blur(16px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-        }
+        #activeTaskProgress { box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 0 6px rgba(99,102,241,.7) !important; }
 
-        .vibe-night {
-            background: linear-gradient(135deg, #090d16 0%, #0f172a 60%, #1e1b4b 100%);
-            color: #f1f5f9;
-        }
-        .vibe-night .glass {
-            background: rgba(15, 23, 42, 0.82);
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            backdrop-filter: blur(16px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
-        }
+        /* Live pointer = brushed metal needle */
+        #livePointer { background:linear-gradient(90deg,#9a9a9a,#fff,#7d7d7d) !important; box-shadow:0 0 5px rgba(0,0,0,.6) !important; }
+        #livePointer div { background:radial-gradient(circle at 35% 30%,#fff,#c9c9c9 50%,#6f6f6f) !important; box-shadow:0 2px 3px rgba(0,0,0,.6) !important; }
 
-        /* Task Block Color Classes */
-        .color-study1 { background-color: #2563eb; color: #fff; }
-        .color-hw1 { background-color: #eab308; color: #fff; }
-        .color-study2 { background-color: #dc2626; color: #fff; }
-        .color-eco { background-color: #16a34a; color: #fff; }
-        .color-hw2 { background-color: #ca8a04; color: #fff; }
-        .color-trading { background-color: #ea580c; color: #fff; }
-        .color-sleep { background-color: #6d28d9; color: #fff; }
+        /* Sunken text wells, badges */
+        .bg-black\/5 { background:rgba(0,0,0,.07) !important; box-shadow:inset 0 2px 5px var(--sh2); border:1px solid rgba(0,0,0,.12); }
+        .bg-emerald-500\/20, .bg-black\/10.rounded-full { box-shadow:inset 0 1px 3px var(--sh2); }
 
-        /* Touch & Tap Animations */
-        .interactive-block {
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, filter 0.2s ease;
-            cursor: pointer;
-        }
-        .interactive-block:active, .interactive-block:hover {
-            transform: translateY(-3px) scale(1.04);
-            filter: brightness(1.15);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-        }
+        /* Tactile press on tappable blocks */
+        .interactive-block { transition:transform .15s ease, filter .15s ease; cursor:pointer; }
+        .interactive-block:hover { transform:translateY(-2px); filter:brightness(1.06); }
+        .interactive-block:active { transform:translateY(2px) scale(.985); filter:brightness(.95); }
 
-        .drawer-slide {
-            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes popupIn {
-            0% { transform: scale(0.85) translateY(20px); opacity: 0; }
-            100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        .animate-popup {
-            animation: popupIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        .drawer-slide { transition:transform .35s cubic-bezier(.16,1,.3,1); }
+        @keyframes popupIn { 0%{transform:scale(.85) translateY(20px);opacity:0} 100%{transform:scale(1) translateY(0);opacity:1} }
+        .animate-popup { animation:popupIn .3s cubic-bezier(.16,1,.3,1) forwards; }
     </style>
 </head>
 
@@ -175,7 +166,7 @@
                     <span>Task Progress</span>
                     <span id="activeTaskPercent">0%</span>
                 </div>
-                <div class="w-full h-3 bg-black/10 rounded-full overflow-hidden p-0.5">
+                <div class="groove w-full h-3 bg-black/10 rounded-full overflow-hidden p-0.5">
                     <div id="activeTaskProgress" class="h-full bg-indigo-600 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
             </div>
@@ -192,7 +183,7 @@
             </div>
 
             <!-- Proportional Interactive Color Bar -->
-            <div class="relative w-full h-10 bg-black/10 rounded-2xl p-1 flex gap-1 overflow-hidden shadow-inner">
+            <div class="groove relative w-full h-10 bg-black/10 rounded-2xl p-1 flex gap-1 overflow-hidden shadow-inner">
                 <div onclick="openTaskModal(0)" class="h-full rounded-xl color-study1 flex items-center justify-center text-[11px] font-black truncate interactive-block" style="width: 16.66%">STUDY</div>
                 <div onclick="openTaskModal(1)" class="h-full rounded-xl color-hw1 flex items-center justify-center text-[11px] font-black truncate interactive-block" style="width: 8.33%">H.W.</div>
                 <div onclick="openTaskModal(2)" class="h-full rounded-xl color-study2 flex items-center justify-center text-[11px] font-black truncate interactive-block" style="width: 8.33%">STUDY</div>
